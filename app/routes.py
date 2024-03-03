@@ -153,31 +153,42 @@ def logout():
     return redirect(url_for('login'))
 
 
-@app.route('/sign-up', methods=['GET', 'POST'])
+@app.route('/register', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
+        print(request.form)
         username = request.form['username']
         email = request.form['email']
         password = request.form['password']
+        confirm = request.form['inputPasswordConfirm']
 
-        print("\nUsername:", username, "\nEmail:", email, "\nPassword", password)
-
-        hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-
-        existing_user_username = User.query.filter_by(username=username).first()
-        existing_user_email = User.query.filter_by(email=email).first()
-
-        if existing_user_username:
-            flash('Username is already taken. Please choose a different one.', 'danger')
-        elif existing_user_email:
-            flash('Email is already taken. Please choose a different one.', 'danger')
-        else:
+        print("\nUsername:", username, "\nEmail:", email, "\nPassword:", password, "\nConfirmPass:", confirm)
+        
+        if confirm == password:
             hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-            user = User(username=username, email=email, password=hashed_password, imgpath="assets/img/avataaars.svg", bio="Enter bio in the Profile Section...")
-            db.session.add(user)
-            db.session.commit()
 
-            flash('Your account has been created! You can now log in.', 'success')
-            return redirect(url_for('login'))
+            existing_user_username = User.query.filter_by(username=username).first()
+            existing_user_email = User.query.filter_by(email=email).first()
+
+            if existing_user_username:
+                flash('Username is already taken. Please choose a different one.', 'danger')
+            elif existing_user_email:
+                flash('Email is already taken. Please choose a different one.', 'danger')
+            else:
+                hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+                user = User(username=username, email=email, password=hashed_password, imgpath="assets/img/avataaars.svg", bio="Enter bio in the Profile Section...")
+                db.session.add(user)
+                db.session.commit()
+
+                flash('Your account has been created! You can now log in.', 'success')
+                return redirect(url_for('login'))
+            
+        else:
+            flash('Passwords Don\'t Match!', 'danger')
 
     return render_template('register.html')
+
+
+@app.route('/password', methods=['GET', 'POST'])
+def password():
+    return render_template('password.html')
