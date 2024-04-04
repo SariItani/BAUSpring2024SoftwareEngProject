@@ -1,4 +1,4 @@
-# app/__init__.py
+ # app/__init__.py
 from datetime import datetime
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
@@ -22,7 +22,7 @@ class User(UserMixin, db.Model):
     password = db.Column(db.String(128), nullable=False)
     imgpath = db.Column(db.String(255))
     bio = db.Column(db.Text)
-    # what else do we need to add?
+    # what else should we add?
 
     def __init__(self, username, email, password, imgpath=None, bio=None):
         self.username = username
@@ -30,10 +30,10 @@ class User(UserMixin, db.Model):
         self.password = password
         self.imgpath = imgpath
         self.bio = bio
-        # add it here
+        # what else should we add?
 
 
-class Message(db.Model):
+class Message(db.Model): # in case we wanted to integrate a chatbot since it's easy
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.String(500), nullable=False)
     sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -46,5 +46,6 @@ class Message(db.Model):
         self.sender = sender
         self.message_type = message_type
 
+# class food? how should we model the food database?
 
 from app import routes

@@ -35,53 +35,6 @@ def run_conversation(prompt):
     return response_text
 
 
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
-
-
-@app.route('/')
-@login_required
-def index():
-    username = current_user.username
-    imgpath = current_user.imgpath
-    bio = current_user.bio
-    return render_template('startbootstrap-landing-page-gh-pages.html', username=username, imgpath=imgpath, bio=bio)
-
-
-@app.route('/chat')
-@login_required
-def chat():
-    user = current_user
-    chat_history = Message.query.filter_by(sender=user).all()
-    if not chat_history:
-        message = Message(content="Hello, I will be your biology assistant. Ask me anything to begin!", sender=user, message_type='server')
-        db.session.add(message)
-        db.session.commit()
-        chat_history = [message]
-    return render_template('chat.html', chat_history=chat_history)
-
-
-@app.route('/submit-message', methods=['POST'])
-@login_required
-def submit_message():
-    message_content = request.form['message']
-
-    user = current_user
-    message = Message(content=message_content, sender=user, message_type='user')
-    db.session.add(message)
-    db.session.commit()
-
-    response = run_conversation(prompt=message_content)
-    print(f"Message sent to user {current_user.username}: {response}")
-
-    message = Message(content=response, sender=user, message_type='server')
-    db.session.add(message)
-    db.session.commit()
-
-    return redirect(url_for('chat'))
-
-
 UPLOAD_FOLDER = 'app/static/assets/img/profilepics'
 ALLOWED_EXTENSIONS = ['jpeg', 'jpg', 'png', 'gif', 'bmp', 'tiff', 'tif', 'svg', 'webp']
 
@@ -95,6 +48,21 @@ def generate_filename(username, extension):
     unique_string = f"{username}{time.time()}"
     hashed_string = hashlib.sha256(unique_string.encode()).hexdigest()
     return f"{hashed_string}.{extension}"
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+
+@app.route('/')
+@login_required
+def index():
+    username = current_user.username
+    imgpath = current_user.imgpath
+    bio = current_user.bio
+    return render_template('startbootstrap-landing-page-gh-pages.html', username=username, imgpath=imgpath, bio=bio)
+
 
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
@@ -126,7 +94,7 @@ def profile():
         print(f"Updating {current_user.username}, {current_user.bio}, {current_user.imgpath} to: {username}, {bio}, {imgpath}")
         db.session.commit()
         return redirect(url_for('profile'))
-    return render_template('profile.html', imgpath=imgpath)
+    return render_template('startbootstrap-sb-admin-gh-pages.html', imgpath=imgpath)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -153,38 +121,32 @@ def logout():
     return redirect(url_for('login'))
 
 
-@app.route('/register', methods=['GET', 'POST'])
+@app.route('/sign-up', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
-        print(request.form)
         username = request.form['username']
         email = request.form['email']
         password = request.form['password']
-        confirm = request.form['inputPasswordConfirm']
 
-        print("\nUsername:", username, "\nEmail:", email, "\nPassword:", password, "\nConfirmPass:", confirm)
-        
-        if confirm == password:
-            hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+        print("\nUsername:", username, "\nEmail:", email, "\nPassword", password)
 
-            existing_user_username = User.query.filter_by(username=username).first()
-            existing_user_email = User.query.filter_by(email=email).first()
+        hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
 
-            if existing_user_username:
-                flash('Username is already taken. Please choose a different one.', 'danger')
-            elif existing_user_email:
-                flash('Email is already taken. Please choose a different one.', 'danger')
-            else:
-                hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-                user = User(username=username, email=email, password=hashed_password, imgpath="assets/img/avataaars.svg", bio="Enter bio in the Profile Section...")
-                db.session.add(user)
-                db.session.commit()
+        existing_user_username = User.query.filter_by(username=username).first()
+        existing_user_email = User.query.filter_by(email=email).first()
 
-                flash('Your account has been created! You can now log in.', 'success')
-                return redirect(url_for('login'))
-            
+        if existing_user_username:
+            flash('Username is already taken. Please choose a different one.', 'danger')
+        elif existing_user_email:
+            flash('Email is already taken. Please choose a different one.', 'danger')
         else:
-            flash('Passwords Don\'t Match!', 'danger')
+            hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+            user = User(username=username, email=email, password=hashed_password, imgpath="assets/img/avataaars.svg", bio="Enter bio in the Profile Section...")
+            db.session.add(user)
+            db.session.commit()
+
+            flash('Your account has been created! You can now log in.', 'success')
+            return redirect(url_for('login'))
 
     return render_template('register.html')
 
@@ -192,3 +154,36 @@ def signup():
 @app.route('/password', methods=['GET', 'POST'])
 def password():
     return render_template('password.html')
+
+
+@app.route('/chat')
+@login_required
+def chat():
+    user = current_user
+    chat_history = Message.query.filter_by(sender=user).all()
+    if not chat_history:
+        message = Message(content="Hello, I will be your assistant. Ask me anything to begin!", sender=user, message_type='server')
+        db.session.add(message)
+        db.session.commit()
+        chat_history = [message]
+    return render_template('chat.html', chat_history=chat_history)
+
+
+@app.route('/submit-message', methods=['POST'])
+@login_required
+def submit_message():
+    message_content = request.form['message']
+
+    user = current_user
+    message = Message(content=message_content, sender=user, message_type='user')
+    db.session.add(message)
+    db.session.commit()
+
+    response = run_conversation(prompt=message_content)
+    print(f"Message sent to user {current_user.username}: {response}")
+
+    message = Message(content=response, sender=user, message_type='server')
+    db.session.add(message)
+    db.session.commit()
+
+    return redirect(url_for('chat'))
