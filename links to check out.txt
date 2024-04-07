@@ -1,0 +1,3 @@
+https://github.com/owenvoke/spoonacularapi
+https://spoonacular.com/food-api/docs
+https://developer.yummly.com/documentation.html?prm-v1=1
