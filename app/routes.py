@@ -42,12 +42,8 @@ def load_user(user_id):
 
 
 @app.route('/')
-@login_required
 def index():
-    username = current_user.username
-    imgpath = current_user.imgpath
-    bio = current_user.bio
-    return render_template('index.html', username=username, imgpath=imgpath, bio=bio)
+    return render_template('index.html')
 
 
 @app.route('/home')
