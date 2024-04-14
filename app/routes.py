@@ -88,7 +88,8 @@ def home():
         
     imgpath = current_user.imgpath
     username = current_user.username
-    return render_template('home.html', imgpath=imgpath, username=username, recipe_image=recipe_image, recipe_title=recipe_title, source_name=source_name, source_url=source_url, price_per_serving=price_per_serving, summary=summary, ingredients=ingredients, readyInMinutes=readyInMinutes, id=id, servings=servings)
+    bio = current_user.bio
+    return render_template('home.html', imgpath=imgpath, username=username, bio=bio, recipe_image=recipe_image, recipe_title=recipe_title, source_name=source_name, source_url=source_url, price_per_serving=price_per_serving, summary=summary, ingredients=ingredients, readyInMinutes=readyInMinutes, id=id, servings=servings)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -237,23 +238,3 @@ def submit_message():
     db.session.commit()
 
     return redirect(url_for('chat'))
-
-
-@app.route('/mcq')
-@login_required
-def mcq():
-    return render_template('mcq.html')
-
-
-@app.route('/qst', methods=['POST', 'GET'])
-@login_required
-def qst():
-    if request.method == 'POST':
-        print(request.form)
-    return render_template('qst.html')
-
-
-@app.route('/future')
-@login_required
-def future():
-    return render_template('future.html')
