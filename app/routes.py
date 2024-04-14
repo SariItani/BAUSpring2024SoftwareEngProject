@@ -200,7 +200,8 @@ def profile():
 
 
 
-
+# This is a chatbot yay, are we gonna use it?
+# Note that we can tune the front end and backend a little bit to enable user-user interaction
 
 @app.route('/chat')
 @login_required
