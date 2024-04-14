@@ -1,0 +1,57 @@
+{% extends 'index.html' %} 
+
+{% block title %}Profile{% endblock %} 
+
+{% block morecss %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}"/>
+{% endblock %}
+
+{% block content %}
+<section class="masthead text-center bg" id="portfolio">
+    <div class="container">
+        <div class="card p-4" style="background-color: #f8f9fa;">
+            <h1 class="mb-4">Update your profile</h1>
+            <form action="{{ url_for('profile') }}" method="POST" enctype="multipart/form-data">
+                <div class="row align-items-center mb-3">
+                    <div class="col-sm-3">
+                        <label for="profile-picture" class="col-form-label">Profile Picture</label>
+                    </div>
+                    <div class="col-sm-6">
+                        <img style="max-width: 200px; max-height: 200px;" src="{{ url_for('static', filename=imgpath) }}" alt="Current Profile Picture" class="mt-2 img-fluid">
+                        <input type="file" class="form-control mt-2" id="profile-picture" name="profile_picture">
+                    </div>
+                </div>
+                <div class="mb-3 row align-items-center">
+                    <label for="username" class="col-sm-3 col-form-label">Username</label>
+                    <div class="col-sm-6">
+                        <input type="text" class="form-control mt-2" id="username" name="username">
+                    </div>
+                </div>
+                <div class="mb-3 row align-items-center">
+                    <label for="bio" class="col-sm-3 col-form-label">Bio</label>
+                    <div class="col-sm-6">
+                        <textarea class="form-control mt-2" id="bio" name="bio" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="mb-3 row align-items-center">
+                    <div class="col-sm-12">
+                        <button type="submit" class="btn btn-primary">Update</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Trigger the form submission when Enter key is pressed
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent the default Enter key behavior
+                document.querySelector('form').submit(); // Submit the form
+            }
+        });
+    });
+</script>
+{% endblock %}
