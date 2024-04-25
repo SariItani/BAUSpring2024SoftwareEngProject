@@ -1,0 +1,12 @@
+.roxanesbutton {
+    background-color:rgb(247, 131, 48);
+    border-radius: 45px;
+    width: 5rem;
+    border: none;
+    margin-left: 10px;
+    height: 2.35rem;
+}
+
+.roxanesptag {
+    color: antiquewhite;
+}
