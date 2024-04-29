@@ -13,10 +13,10 @@ from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
 
 
-bcrypt = Bcrypt(app)
+bcrypt = Bcrypt(app) #library used for encryption
 
 
-load_dotenv()
+load_dotenv() #load all api keys 
 
 API_KEY = os.getenv('API_KEY')
 SPOON_KEY = os.getenv('SPOON_KEY')
@@ -36,33 +36,43 @@ def run_conversation(prompt):
     return response_text
 
 
-@login_manager.user_loader
+@login_manager.user_loader #load the user
 def load_user(user_id):
     return User.query.get(int(user_id))
 
 
-@app.route('/')
+@app.route('/') #home directory, load the index
 @login_required
 def index():
     return redirect(url_for('home'))
 
 
-@app.route('/home', methods=['GET', 'POST'])
+def get_similar_recipes(recipe_id):
+    url = f"https://api.spoonacular.com/recipes/{recipe_id}/similar?apiKey={SPOON_KEY}"
+    response = requests.get(url)
+    print(response)
+    if response.status_code == 200:
+        similar_recipes = response.json()
+        return similar_recipes
+    else:
+        pass
+
+@app.route('/home', methods=['GET', 'POST']) #index, for better practice
 @login_required
-def home():
+def home(): #login required
     random_recipe = None
     
-    if request.method == 'POST':
+    if request.method == 'POST': #requires more details for recipe
         id = request.form['detail']
         print("Recipe id:", id)
 
-    random_recipe_response = requests.get(
+    random_recipe_response = requests.get( #posting a request for spoonkey api to get random recipe
         f"https://api.spoonacular.com/recipes/random?&apiKey={SPOON_KEY}"
     )
     
-    if random_recipe_response.status_code == 200:
-        random_recipe_data = random_recipe_response.json()
-        
+    if random_recipe_response.status_code == 200: #if ok respond, error management
+        random_recipe_data = random_recipe_response.json() #takes response for http request as json and parse it
+        #only getting data
         id = random_recipe_data['recipes'][0]['id']
         readyInMinutes = random_recipe_data['recipes'][0]['readyInMinutes']
         instructions = random_recipe_data['recipes'][0]['instructions']
@@ -86,22 +96,55 @@ def home():
         price_per_serving = random_recipe_data['recipes'][0]['pricePerServing']
         summary = random_recipe_data['recipes'][0]['summary']
         
-    imgpath = current_user.imgpath
-    username = current_user.username
+        similar_recipes = get_similar_recipes(id)
+        
+        print("similar_recipes:",similar_recipes)
+        recipe_titles = []
+        recipe_images = []
+        recipe_price_per_serving = []
+        for recipe in similar_recipes:
+            # recipe = recipe[0]
+            recipe_id = recipe['id']
+            print(recipe_id)
+            # GET https://api.spoonacular.com/recipes/{id}/information
+            print(requests.get(f"https://api.spoonacular.com/recipes/{recipe_id}/information?&apiKey={SPOON_KEY}"))
+            r = requests.get(f"https://api.spoonacular.com/recipes/{recipe_id}/information?&apiKey={SPOON_KEY}")
+            print(r)
+            print(r.status_code)
+            if r.status_code == 200:
+                r = r.json()
+                print(r)
+                recipe_title = r['title']
+                recipe_image_ = r['image']
+                recipe_price = r['pricePerServing']
+                
+                recipe_titles.append(recipe_title)
+                recipe_images.append(recipe_image_)
+                recipe_price_per_serving.append(recipe_price)
+
+                # Do something with the retrieved similar recipes data
+                print(f"Recipe ID: {recipe_id}")
+                print(f"Title: {recipe_title}")
+                print(f"recipe_price: {recipe_price}")
+
+        print(recipe_price_per_serving, recipe_titles, recipe_images)
+        
+    imgpath = current_user.imgpath #needs to load the user, takes data from  database and rest 
+    username = current_user.username #pass them to frontend
     bio = current_user.bio
-    return render_template('home.html', imgpath=imgpath, username=username, bio=bio, recipe_image=recipe_image, recipe_title=recipe_title, source_name=source_name, source_url=source_url, price_per_serving=price_per_serving, summary=summary, ingredients=ingredients, readyInMinutes=readyInMinutes, id=id, servings=servings)
+    return render_template('home.html', imgpath=imgpath, username=username, bio=bio, recipe_image=recipe_image, recipe_title=recipe_title, source_name=source_name, source_url=source_url, price_per_serving=price_per_serving, summary=summary, ingredients=ingredients, readyInMinutes=readyInMinutes, id=id, servings=servings, recipe_price_per_serving=recipe_price_per_serving, recipe_titles=recipe_titles, recipe_images=recipe_images)
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/login', methods=['GET', 'POST']) #get info from login form and verify data
 def login():
-    if request.method == 'POST':
+    if request.method == 'POST':     #to log the user in
         print(request.form)
         if 'loginButton' in request.form:
             username = request.form['username']
             password = request.form['password']
             email = request.form['emailAddress']
             
-            user = User.query.filter_by(username=username).first()
+            user = User.query.filter_by(username=username).first()  #select first from query
 
             if user and bcrypt.check_password_hash(user.password, password):
                 login_user(user)
@@ -121,7 +164,7 @@ def login():
                 flash('Passwords dont match', 'danger')
                 redirect(url_for('login'))
             
-            hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+            hashed_password = bcrypt.generate_password_hash(password).decode('utf-8') #encrypt pass
 
             existing_user_username = User.query.filter_by(username=username).first()
             existing_user_email = User.query.filter_by(email=email).first()
@@ -139,7 +182,7 @@ def login():
                 flash('Your account has been created! You can now log in.', 'success')
                 return redirect(url_for('home'))
 
-    joke_url = f'https://api.spoonacular.com/food/jokes/random?apiKey={SPOON_KEY}'
+    joke_url = f'https://api.spoonacular.com/food/jokes/random?apiKey={SPOON_KEY}' #random jokes
     print(joke_url)
     response = requests.get(joke_url)
     print(response)
@@ -151,26 +194,26 @@ def login():
     return render_template('login.html', joke=joke)
 
 
-@app.route('/logout')
+@app.route('/logout') #logout and redirect to home page
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('login'))
 
 
-UPLOAD_FOLDER = 'app/static/assets/img/profilepics'
+UPLOAD_FOLDER = 'app/static/assets/img/profilepics' #getting profile pics
 ALLOWED_EXTENSIONS = ['jpeg', 'jpg', 'png', 'gif', 'bmp', 'tiff', 'tif', 'svg', 'webp']
 
-def allowed_file(filename):
+def allowed_file(filename): #finding if file is right image
     file_ext = filename.rsplit('.', 1)[1].lower()
     return '.' in filename and file_ext in ALLOWED_EXTENSIONS
 
-def generate_filename(username, extension):
-    unique_string = f"{username}{time.time()}"
+def generate_filename(username, extension): #get username and ext of file, so every username has a hash
+    unique_string = f"{username}{time.time()}" #which is private image
     hashed_string = hashlib.sha256(unique_string.encode()).hexdigest()
     return f"{hashed_string}.{extension}"
 
-@app.route('/profile', methods=['GET', 'POST'])
+@app.route('/profile', methods=['GET', 'POST']) #change and validation profil stuff, update
 @login_required
 def profile():
     imgpath = current_user.imgpath
@@ -203,7 +246,7 @@ def profile():
 # This is a chatbot yay, are we gonna use it?
 # Note that we can tune the front end and backend a little bit to enable user-user interaction
 
-@app.route('/chat')
+@app.route('/chat')  #mostly wont use
 @login_required
 def chat():
     user = current_user

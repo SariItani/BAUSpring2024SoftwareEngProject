@@ -6,7 +6,9 @@
     margin-left: 10px;
     height: 2.35rem;
 }
-
+.roxanesbutton:hover{
+cursor: pointer;
+}
 .roxanesptag {
     color: antiquewhite;
 }
