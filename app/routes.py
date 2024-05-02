@@ -48,7 +48,7 @@ def index():
 
 
 def get_similar_recipes(recipe_id):
-    url = f"https://api.spoonacular.com/recipes/{recipe_id}/similar?apiKey={SPOON_KEY}"
+    url = f"https://api.spoonacular.com/recipes/{recipe_id}/similar?apiKey={SPOON_KEY}" #endpoints
     response = requests.get(url)
     print(response)
     if response.status_code == 200:
@@ -241,44 +241,3 @@ def profile():
         return redirect(url_for('profile'))
     return render_template('profile.html', imgpath=imgpath)
 
-
-
-# This is a chatbot yay, are we gonna use it?
-# Note that we can tune the front end and backend a little bit to enable user-user interaction
-
-@app.route('/chat')  #mostly wont use
-@login_required
-def chat():
-    user = current_user
-    chat_history = Message.query.filter_by(sender=user).all()
-    for message in chat_history:
-        if message.message_type == 'user':
-            print("User:", message.content)
-        else:
-            print("chatgpt:", message.content)
-        message.content = message.content.replace('\\n', '<br>')
-    if not chat_history:
-        message = Message(content="Hello, I will be your biology assistant. Ask me anything to begin!", sender=user, message_type='server')
-        db.session.add(message)
-        db.session.commit()
-        chat_history = [message]
-    return render_template('chat.html', chat_history=chat_history)
-
-
-@app.route('/submit-message', methods=['POST'])
-@login_required
-def submit_message():
-    message_content = request.form['message']
-
-    user = current_user
-    message = Message(content=message_content, sender=user, message_type='user')
-    db.session.add(message)
-    db.session.commit()
-
-    response = run_conversation(prompt=message_content)
-
-    message = Message(content=response, sender=user, message_type='server')
-    db.session.add(message)
-    db.session.commit()
-
-    return redirect(url_for('chat'))
